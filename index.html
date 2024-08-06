@@ -23,14 +23,8 @@
 	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
 		integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.min.js"
-		integrity="sha512-8BqQ2RH4L4sQhV41ZB24fUc1nGcjmrTA6DILV/aTPYuUzo+wBdYdp0fvQ76Sxgf36p787CXF7TktWlcxu/zyOg=="
-		crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-	<link rel="stylesheet"
-		href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"
-		integrity="sha512-cUoWMYmv4H9TGP4hbm1mIjYo90WzIQFo/5jj+P5tQcDTf+iVR59RyIj/a9fRsBxzxt5Dnv/Ex7MzRIxcDwaOLw=="
-		crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<link rel="stylesheet" href="./leaflet-sidebar.min.css" />
+	<script src="./leaflet-sidebar.min.js"></script>
 
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
 		integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
@@ -53,93 +47,11 @@
 			z-index: 0;
 		}
 
-		#app {
-			cursor: pointer;
-			z-index: 1;
-		}
-
-		.awesome-marker {
-			font-size: 15px;
-			padding-top: 5px;
-		}
-
-		@keyframes fadeIn {
-			0% {
-				opacity: 0;
-			}
-
-			100% {
-				opacity: 1;
-			}
-		}
-
-		.modal {
-			display: none;
-			height: 100vh;
-			position: fixed;
-			top: 0;
-			width: 100%;
-			z-index: 20;
-			animation-name: fadeIn;
-			animation-duration: 2s;
-		}
-
-		.modal_bg {
-			background: rgba(0, 0, 0, 0.8);
-			height: 100vh;
-			position: absolute;
-			width: 100%;
-		}
-
-		.modal_content {
-			left: 50%;
-			position: absolute;
-			top: 50%;
-			transform: translate(-50%, -50%);
-			width: 85%;
-			max-width: 600px;
-			background: #ffffff;
-			padding: 10px;
-			height: 450px;
-
-		}
-
-		.closed {
-			position: absolute;
-			right: 0px;
-			top: -40px;
-			border-radius: 50%;
-			width: 30px;
-			height: 30px;
-			z-index: 30;
-			display: block;
-			text-align: center;
-			font-size: 20px;
-			color: #ffffff;
-			line-height: 25px;
-			cursor: pointer;
-			border: 1px solid #ffffff;
-			background: rgba(255, 255, 255, .25);
-		}
-
-		.closed:hover {
-			background: rgba(255, 255, 255, .65);
-		}
-
-		.closed a {
-			text-decoration: none;
-			border: none;
-		}
-
-		.js-modal-close {
-			color: #ffffff;
-		}
-
-		h1 {
+		.title {
 			position: relative;
 		}
 
-		h1:after {
+		.title:after {
 			content: "";
 			position: absolute;
 			left: 0;
@@ -148,14 +60,6 @@
 			height: 7px;
 			background: -webkit-repeating-linear-gradient(-45deg, #6ad1c8, #6ad1c8 2px, #fff 2px, #fff 4px);
 			background: repeating-linear-gradient(-45deg, #6ad1c8, #6ad1c8 2px, #fff 2px, #fff 4px);
-		}
-
-		.kaisetu {
-			width: 100%;
-			height: 100%;
-			padding: 0;
-			margin: 0;
-			overflow-y: scroll;
 		}
 
 		.kaisetu a,
@@ -193,12 +97,16 @@
 
 			const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 				maxZoom: 19,
-				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a><br>更新日：2024年01月02日、<a href="https://hitoshi2s.netlify.app/" target="_blank">仁志</a>'
+				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
 			}).addTo(map);
 
 			let road = L.geoJSON(data, { onEachFeature: popup_road, pointToLayer: brown });
 
 			map.addLayer(road);
+
+			// メニューをマップに追加
+			const sidebar = L.control.sidebar('sidebar').addTo(map);
+
 
 		}
 
@@ -236,18 +144,6 @@
 			layer.bindPopup(popup);
 		}
 
-
-		window.display = () => {
-
-			document.querySelector(".js-modal").style.display = "block";
-
-		}
-
-		window.closed2 = () => {
-
-			document.querySelector(".js-modal").style.display = "none";
-		}
-
 	</script>
 
 	<!-- tailwind -->
@@ -259,37 +155,59 @@
 
 	<div id='map'></div>
 
-	<div id="app" class="fixed top-0 mt-2 ml-2 p-2 bg-white rounded-md left-0 border-solid border-2 border-indigo-600"
-		onclick="display();">このマップについて</div>
+	<div id="sidebar" class="sidebar collapsed">
+		<!-- Nav tabs -->
+		<div class="sidebar-tabs">
+			<ul role="tablist">
+				<li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
+				<li><a href="#data" role="tab"><i class="fa-solid fa-database"></i></a></li>
+				<li><a href="#share" role="tab"><i class="fa-solid fa-share-nodes"></i></a></li>
+				<li><a href="#question" target="_blank" role="tab"><i class="fa-solid fa-envelope"></i></a></li>
+			</ul>
+		</div>
 
-	<div class="modal js-modal">
-		<div class="modal_bg" onClick="closed2();"></div>
+		<!-- Tab panes -->
+		<div class="sidebar-content">
+			<div class="sidebar-pane" id="home">
+				<h1 class="sidebar-header">
+					道の駅マップ
+					<span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+				</h1>
 
-		　　<div class="modal_content"><span class="closed" onClick="closed2();">×</span>
+				<div class="kaisetu py-5">
+					<h1 class="text-2xl pb-1 mb-5">道の駅マップとは？</h1>
 
-			<div class="kaisetu py-5">
-				<h1 class="text-3xl pb-1 mb-5">道の駅マップとは？</h1>
+					<img src="./top.jpg" width="100%" alt="菜の花畑、道の駅笠岡ベイファーム by FIND47.JP">
+					<p class="text-xs">菜の花畑、道の駅笠岡ベイファーム by FIND47.JP、<a href="https://creativecommons.org/licenses/by/4.0/deed.ja"
+						target="_blank">クリエイティブ・コモンズ・ライセンス（表示4.0 国際）</a></p>
 
-				<img src="./top.jpg" width="100%" alt="菜の花畑、道の駅笠岡ベイファーム by FIND47.JP">
-				菜の花畑、道の駅笠岡ベイファーム by FIND47.JP、<a href="https://creativecommons.org/licenses/by/4.0/deed.ja"
-					target="_blank">クリエイティブ・コモンズ・ライセンス（表示4.0 国際）</a>
+					<p class="my-5 text-lg">日本全国にある道の駅をマップにしました。</p>
+					<p class="my-5 text-lg">地域の色が出る道の駅、あなたも旅行のついでに、立ち寄ってみては？</p>
 
-				<p class="my-5">日本全国にある道の駅をマップにしました。</p>
-				<p class="my-5">地域の色が出る道の駅、あなたも旅行のついでに、立ち寄ってみては？</p>
-
-				<h1 class="text-3xl pb-1 mt-5 mb-5">使用したオープンデータ</h1>
-				「<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-P35.html" target="_blank">国土数値情報（道の駅データ）</a>」（国土交通省）をもとに東京福祉専門学校IT医療ソーシャルワーカー科作成<br><br>
-				
-				<a href="http://linkdata.org/work/rdf1s2861i" target="_blank">道の駅</a>、CC BY 4.0
-
-				<h1 class="text-3xl pb-1 my-5">ライセンス</h1>
-				<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank">CC BY
-					4.0国際</a>です。ご自由にご利用ください！
+				</div>
 
 			</div>
 
-			　　
+			<div class="sidebar-pane" id="data">
+				<h1 class="sidebar-header">
+					使用したオープンデータ
+					<span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
+				</h1>
+
+				<div class="kaisetu py-5">
+
+					<a href="http://linkdata.org/work/rdf1s2861i" target="_blank">道の駅</a>、CC BY 4.0<br>
+					＊「<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-P35.html"
+						target="_blank">国土数値情報（道の駅データ）</a>」（国土交通省）をもとに東京福祉専門学校IT医療ソーシャルワーカー科作成<br><br>
+
+					このマップも<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank">CC BY 4.0国際</a>です。ご自由にご利用ください！
+
+				</div>
+
+			</div>
+
 		</div>
+
 	</div>
 
 	<!-- Google tag (gtag.js) -->
