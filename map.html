@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html lang="ja">
+<title>map</title>
+
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#">
+	<meta charset="UTF-8" name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+	<!-- tailwind -->
+	<script src="https://cdn.tailwindcss.com"></script>
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+		integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+		integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+		integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+		crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"
+		integrity="sha512-uKQ39gEGiyUJl4AI6L+ekBdGKpGw4xJ55+xyJG7YFlJokPNYegn9KwQ3P8A7aFQAUtUsAQHep+d/lrGqrbPIDQ=="
+		crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+	<script src="./road.geojson"></script>
+
+	<style>
+		html,
+		body,
+		#map {
+			width: 100%;
+			height: 100%;
+			padding: 0;
+			margin: 0;
+			z-index: 0;
+		}
+
+		.title {
+			position: relative;
+		}
+
+		.title:after {
+			content: "";
+			position: absolute;
+			left: 0;
+			bottom: 0;
+			width: 100%;
+			height: 7px;
+			background: -webkit-repeating-linear-gradient(-45deg, #6ad1c8, #6ad1c8 2px, #fff 2px, #fff 4px);
+			background: repeating-linear-gradient(-45deg, #6ad1c8, #6ad1c8 2px, #fff 2px, #fff 4px);
+		}
+
+		.kaisetu a,
+		#map .link {
+			color: #16a085 !important;
+			border-bottom: 1px dotted #16a085;
+			;
+		}
+
+		.kaisetu a:after,
+		#map .link:after {
+			font-family: "Font Awesome 6 Free";
+			content: ' \f35d';
+			font-weight: 900;
+		}
+
+		.wrapper {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+		}
+	</style>
+
+	<script type="module">
+
+		let map;
+
+		onload = async () => {
+
+			map = L.map('map', { zoomControl: false });
+
+			/* コントロールボタン */
+			L.control.zoom({ position: 'topright' }).addTo(map);
+
+			map.setView([37.300, 137.800], 5);
+
+			const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				maxZoom: 19,
+				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+			}).addTo(map);
+
+			let road = L.geoJSON(data, { onEachFeature: popup_road, pointToLayer: brown });
+
+			map.addLayer(road);
+
+		}
+
+		/* Font Awesome */
+		let brown = (feature, latlng) => {
+			return L.circleMarker(latlng, {
+				radius: 8,
+				fillColor: "#96514d",
+				color: "#ffffff",
+				weight: 1,
+				opacity: 1,
+				fillOpacity: 0.8
+			});
+		}
+
+
+		/* Popup Display */
+		let popup_road = (feature, layer) => {
+			let popup;
+			if (feature.properties && feature.properties.name) {
+				popup = feature.properties.name;
+
+				popup += "<br><img src = '" + feature.properties.photo + "' width='500px'>";
+
+				if (feature.properties.wikipedia != "") {
+					popup += "<br><a href='" + feature.properties.wikipedia + "' target='_blank' class='link'>WikiPedia</a>";
+				} else { }
+
+				if (feature.properties.url != "") {
+					popup += "、<a href='" + feature.properties.url + "' target='_blank' class='link'>URL</a>";
+				} else { }
+
+			} else { };
+
+			layer.bindPopup(popup);
+		}
+
+	</script>
+
+</head>
+
+<body>
+
+	<div id='map'></div>
+
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPP84V2NHB"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+
+		gtag('config', 'G-MPP84V2NHB');
+	</script>
+
+</body>
+
+</html>

@@ -23,202 +23,240 @@
 	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
 		integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
 
-	<link rel="stylesheet" href="./leaflet-sidebar.min.css" />
-	<script src="./leaflet-sidebar.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-		integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
-		crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"
-		integrity="sha512-uKQ39gEGiyUJl4AI6L+ekBdGKpGw4xJ55+xyJG7YFlJokPNYegn9KwQ3P8A7aFQAUtUsAQHep+d/lrGqrbPIDQ=="
-		crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"
+    integrity="sha512-GWzVrcGlo0TxTRvz9ttioyYJ+Wwk9Ck0G81D+eO63BaqHaJ3YZX9wuqjwgfcV/MrB2PhaVX9DkYVhbFpStnqpQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 	<script src="./road.geojson"></script>
 
-	<style>
-		html,
-		body,
-		#map {
-			width: 100%;
-			height: 100%;
-			padding: 0;
-			margin: 0;
-			z-index: 0;
-		}
+  <script src="https://cdn.tailwindcss.com"></script>
 
-		.title {
-			position: relative;
-		}
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
-		.title:after {
-			content: "";
-			position: absolute;
-			left: 0;
-			bottom: 0;
-			width: 100%;
-			height: 7px;
-			background: -webkit-repeating-linear-gradient(-45deg, #6ad1c8, #6ad1c8 2px, #fff 2px, #fff 4px);
-			background: repeating-linear-gradient(-45deg, #6ad1c8, #6ad1c8 2px, #fff 2px, #fff 4px);
-		}
+  <link rel="manifest" href="./manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js').then(function () {
+        console.log('Service Worker Registered');
+      });
+    }
+  </script>
 
-		.kaisetu a,
-		#map .link {
-			color: #16a085 !important;
-			border-bottom: 1px dotted #16a085;
-			;
-		}
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      z-index: 0;
+    }
 
-		.kaisetu a:after,
-		#map .link:after {
-			font-family: "Font Awesome 6 Free";
-			content: ' \f35d';
-			font-weight: 900;
-		}
+    body {
+      font-family: "Source Han Serif JP", "Noto Serif CJK JP", "游明朝体", "Yu Mincho", YuMincho, serif;
+    }
 
-		.wrapper {
-			display: grid;
-			grid-template-columns: repeat(2, 1fr);
-		}
-	</style>
+    .container {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      z-index: 5;
+    }
 
-	<script type="module">
+    .nav {
+      position: fixed;
+      z-index: 10;
+      top: 0;
+      left: 0;
+      width: 12%;
+      height: 100%;
+      max-width: 70px;
+      border-right: 1px dotted #000000;;
+      background: rgba(255, 255, 255, 1);
+    }
 
-		let map;
+    .nav p {
+      cursor: pointer;
+    }
 
-		onload = async () => {
+    #overview,#database,#share {
+      position: fixed;
+      background: rgba(255, 255, 255, 1);
+      z-index: 9;
+      width: 70%;
+      height: 100%;
+      top: 0;
+      left: 12%;
+      margin: 0;
+      padding: 0;
+      display: none;
+    }
 
-			map = L.map('map', { zoomControl: false });
+    .ja{
+      color: #1e50a2;
+    }
 
-			/* コントロールボタン */
-			L.control.zoom({ position: 'topright' }).addTo(map);
+    #closed-btn,
+    #closed-btn2,
+    #closed-btn3{
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      border-radius: .3em;
+      color: #ffffff;
+      background: #1e50a2;
+      cursor: pointer;
+      text-align: center;
+    }
 
-			map.setView([37.300, 137.800], 5);
+    #closed-btn:hover,
+    #closed-btn2:hover,
+    #closed-btn3:hover{
+      background: #ffffff;
+      color: #1e50a2;
+      border: 1px solid #1e50a2;
+    }
 
-			const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				maxZoom: 19,
-				attribution: '&copy; <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
-			}).addTo(map);
+    .img_data{
+      color: #95949a;
+    }
 
-			let road = L.geoJSON(data, { onEachFeature: popup_road, pointToLayer: brown });
+    #database a{
+      border-bottom: 1px dotted #000000;;
+    }
 
-			map.addLayer(road);
+    @media screen and (min-width: 768px) {
 
-			// メニューをマップに追加
-			const sidebar = L.control.sidebar('sidebar').addTo(map);
+      .nav {
+        width: 70px;
+      }
 
+      #overview,#database,#share {
+        left: 70px;
+        max-width: 500px;
+      }
 
-		}
-
-		/* Font Awesome */
-		let brown = (feature, latlng) => {
-			return L.circleMarker(latlng, {
-				radius: 8,
-				fillColor: "#96514d",
-				color: "#ffffff",
-				weight: 1,
-				opacity: 1,
-				fillOpacity: 0.8
-			});
-		}
-
-
-		/* Popup Display */
-		let popup_road = (feature, layer) => {
-			let popup;
-			if (feature.properties && feature.properties.name) {
-				popup = feature.properties.name;
-
-				popup += "<br><img src = '" + feature.properties.photo + "' width='500px'>";
-
-				if (feature.properties.wikipedia != "") {
-					popup += "<br><a href='" + feature.properties.wikipedia + "' target='_blank' class='link'>WikiPedia</a>";
-				} else { }
-
-				if (feature.properties.url != "") {
-					popup += "、<a href='" + feature.properties.url + "' target='_blank' class='link'>URL</a>";
-				} else { }
-
-			} else { };
-
-			layer.bindPopup(popup);
-		}
-
-	</script>
-
-	<!-- tailwind -->
-	<script src="https://cdn.tailwindcss.com"></script>
+    }
+  </style>
 
 </head>
 
 <body>
 
-	<div id='map'></div>
+  <div class="nav text-center">
+    <p class="home"><i class="fa-solid fa-xl fa-bars mt-3"></i></p>
+    <p class="database"><i class="fa-solid fa-xl fa-database mt-7"></i></p>
+    <p class="share"><i class="fa-solid fa-xl fa-share-nodes mt-7"></i></p>
 
-	<div id="sidebar" class="sidebar collapsed">
-		<!-- Nav tabs -->
-		<div class="sidebar-tabs">
-			<ul role="tablist">
-				<li><a href="#home" role="tab"><i class="fa fa-bars"></i></a></li>
-				<li><a href="#data" role="tab"><i class="fa-solid fa-database"></i></a></li>
-				<li><a href="#share" role="tab"><i class="fa-solid fa-share-nodes"></i></a></li>
-				<li><a href="#question" target="_blank" role="tab"><i class="fa-solid fa-envelope"></i></a></li>
-			</ul>
-		</div>
+  </div>
 
-		<!-- Tab panes -->
-		<div class="sidebar-content">
-			<div class="sidebar-pane" id="home">
-				<h1 class="sidebar-header">
-					道の駅マップ
-					<span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
-				</h1>
+  <div id="overview"><span id="closed-btn" class="py-2 px-3 text-xs"><i class="fa-solid fa-arrow-left"></i></span>
+    <h1 class="text-xl pl-3 pt-3">道の駅マップ</h1>
 
-				<div class="kaisetu py-5">
-					<h1 class="text-2xl pb-1 mb-5">道の駅マップとは？</h1>
+    <img src="./top.jpg" class="px-3 mt-3" width="100%" alt="菜の花畑、道の駅笠岡ベイファーム by FIND47.JP">
+    <p class="text-xs px-3 img_data">菜の花畑、道の駅笠岡ベイファーム by FIND47.JP、<a href="https://creativecommons.org/licenses/by/4.0/deed.ja"
+      target="_blank">CC BY 4.0</a></p>
 
-					<img src="./top.jpg" width="100%" alt="菜の花畑、道の駅笠岡ベイファーム by FIND47.JP">
-					<p class="text-xs">菜の花畑、道の駅笠岡ベイファーム by FIND47.JP、<a href="https://creativecommons.org/licenses/by/4.0/deed.ja"
-						target="_blank">クリエイティブ・コモンズ・ライセンス（表示4.0 国際）</a></p>
+      <h2 class="text-lg my-5 px-3">このマップについて</h2>
 
-					<p class="my-5 text-lg">日本全国にある道の駅をマップにしました。</p>
-					<p class="my-5 text-lg">地域の色が出る道の駅、あなたも旅行のついでに、立ち寄ってみては？</p>
+    <p class="my-5 text-sm px-3">日本全国にある道の駅をマップにしました。</p>
+    <p class="my-5 text-sm px-3">地域の色が出る道の駅、あなたも旅行のついでに、立ち寄ってみては？</p>
 
-				</div>
+  </div><!-- overview -->
 
-			</div>
+  <div id="database" class="px-3"><span id="closed-btn2" class="py-2 px-3 text-xs"><i class="fa-solid fa-arrow-left"></i></span>
+    <h1 class="text-xl pl-3 pt-3">オープンデータ</h1>
 
-			<div class="sidebar-pane" id="data">
-				<h1 class="sidebar-header">
-					使用したオープンデータ
-					<span class="sidebar-close"><i class="fa fa-caret-left"></i></span>
-				</h1>
+    <p class="my-5 text-sm px-3"><a href="http://linkdata.org/work/rdf1s2861i" target="_blank">道の駅</a>、CC BY 4.0</p>
+    
+    <p class="my-5 text-sm px-3">＊「<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-P35.html"
+      target="_blank">国土数値情報（道の駅データ）</a>」（国土交通省）をもとに東京福祉専門学校IT医療ソーシャルワーカー科作成</p>
 
-				<div class="kaisetu py-5">
+    <p class="my-5 text-sm px-3">このマップも<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank">CC BY 4.0</a>です。ご自由にご利用ください！</p>
 
-					<a href="http://linkdata.org/work/rdf1s2861i" target="_blank">道の駅</a>、CC BY 4.0<br>
-					＊「<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-P35.html"
-						target="_blank">国土数値情報（道の駅データ）</a>」（国土交通省）をもとに東京福祉専門学校IT医療ソーシャルワーカー科作成<br><br>
+  </div><!-- database -->
 
-					このマップも<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank">CC BY 4.0国際</a>です。ご自由にご利用ください！
+  <div id="share" class="px-3"><span id="closed-btn3" class="py-2 px-3 text-xs"><i class="fa-solid fa-arrow-left"></i></span>
+    <h1 class="text-xl pl-3 pt-3">シェア</h1>
 
-				</div>
+    <h2 class="text-lg my-5 px-3">アプリURL</h2>
 
-			</div>
+    <p class="my-5 text-sm px-3">https://roadstationmap.netlify.app/</p>
 
-		</div>
+    <h2 class="text-lg my-5 px-3">二次元バーコード</h2>   
 
-	</div>
+    <img src="./qr.jpg" class="my-5 px-3"> 
 
-	<!-- Google tag (gtag.js) -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-MPP84V2NHB"></script>
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag() { dataLayer.push(arguments); }
-		gtag('js', new Date());
 
-		gtag('config', 'G-MPP84V2NHB');
-	</script>
+  </div><!-- share -->
+
+  <span class="container"></span>
+
+
+  <script type="module">
+
+    const cont = document.querySelector(".container");
+
+    cont.innerHTML = "<iframe src='./map.html' width='100%' height= '100%' border='0'></iframe>";
+
+    const home = document.querySelector(".home");
+    const database = document.querySelector(".database");
+    const share = document.querySelector(".share");
+
+    home.addEventListener("click", () => {
+      $('#overview').fadeIn();
+      $('#database').fadeOut();
+      $('#share').fadeOut();
+
+    })
+
+    database.addEventListener("click", () => {
+      $('#database').fadeIn();
+      $('#overview').fadeOut();
+      $('#share').fadeOut();
+
+    })
+
+    share.addEventListener("click", () => {
+      $('#share').fadeIn();
+      $('#database').fadeOut();
+      $('#overview').fadeOut();
+
+    })
+
+    const closed_btn = document.querySelector("#closed-btn");
+    const closed_btn2 = document.querySelector("#closed-btn2");
+    const closed_btn3 = document.querySelector("#closed-btn3");
+
+    closed_btn.addEventListener('click', () => {
+      $('#overview').fadeOut();
+    });
+
+    closed_btn2.addEventListener('click', () => {
+      $('#database').fadeOut();
+    });
+
+    closed_btn3.addEventListener('click', () => {
+      $('#share').fadeOut();
+    });
+
+  </script>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MPP84V2NHB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-MPP84V2NHB');
+  </script>
 
 </body>
 
