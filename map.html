@@ -15,6 +15,12 @@
 	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
 		integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
 
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-pulse-icon@0.1.0/src/L.Icon.Pulse.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/leaflet-pulse-icon@0.1.0/src/L.Icon.Pulse.min.js"></script>
+
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
 		integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
 		crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -23,7 +29,7 @@
 		integrity="sha512-uKQ39gEGiyUJl4AI6L+ekBdGKpGw4xJ55+xyJG7YFlJokPNYegn9KwQ3P8A7aFQAUtUsAQHep+d/lrGqrbPIDQ=="
 		crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-	<script src="./road.geojson"></script>
+	<script src="./roadstation.geojson"></script>
 
 	<style>
 		html,
@@ -36,29 +42,15 @@
 			z-index: 0;
 		}
 
-		.title {
-			position: relative;
+		body {
+			font-family: "Source Han Serif JP", "Noto Serif CJK JP", "游明朝体", "Yu Mincho", YuMincho, serif;
 		}
 
-		.title:after {
-			content: "";
-			position: absolute;
-			left: 0;
-			bottom: 0;
-			width: 100%;
-			height: 7px;
-			background: -webkit-repeating-linear-gradient(-45deg, #6ad1c8, #6ad1c8 2px, #fff 2px, #fff 4px);
-			background: repeating-linear-gradient(-45deg, #6ad1c8, #6ad1c8 2px, #fff 2px, #fff 4px);
-		}
-
-		.kaisetu a,
 		#map .link {
 			color: #16a085 !important;
 			border-bottom: 1px dotted #16a085;
-			;
 		}
 
-		.kaisetu a:after,
 		#map .link:after {
 			font-family: "Font Awesome 6 Free";
 			content: ' \f35d';
@@ -68,6 +60,21 @@
 		.wrapper {
 			display: grid;
 			grid-template-columns: repeat(2, 1fr);
+		}
+
+		.leaflet-popup-content-wrapper {
+			width: 280px;
+		}
+
+		#yes {
+			color: #ff0000;
+			font-size: 15px;
+			font-weight: bold !important;
+		}
+
+		#no {
+			font-size: 15px;
+			font-weight: bold !important;
 		}
 	</style>
 
@@ -93,6 +100,40 @@
 
 			map.addLayer(road);
 
+			let ido; let keido;
+
+			let marker = null;
+
+			let gps_get = (position) => {
+				ido = position.coords.latitude;
+				keido = position.coords.longitude;
+				map.setView([ido, keido], 15);
+
+				let pulsingIcon = L.icon.pulse({ iconSize: [12, 12], color: 'red', fillColor: 'red' });
+
+				if (map && marker) {
+					map.removeLayer(marker);
+					marker = null;
+				}
+
+				marker = L.marker([ido, keido], { icon: pulsingIcon }).addTo(map);
+
+			}
+
+			let gps_error = (error) => {
+				alert("エラーが発生したので、現在地を取得できませんでした。");
+			}
+
+			let GPS = () => {
+				if (navigator.geolocation) {
+					navigator.geolocation.getCurrentPosition(gps_get, gps_error);
+				} else {
+					alert("エラーが発生したので、現在地を取得できませんでした。");
+				}
+			}
+
+			let gps_button = L.easyButton('fa-location-arrow', function () { GPS(); }, { position: 'topright' }).addTo(map);
+
 		}
 
 		/* Font Awesome */
@@ -112,16 +153,110 @@
 		let popup_road = (feature, layer) => {
 			let popup;
 			if (feature.properties && feature.properties.name) {
-				popup = feature.properties.name;
+				popup = "<h1 class='text-xl mb-3'>" + feature.properties.name + "</h1>";
 
-				popup += "<br><img src = '" + feature.properties.photo + "' width='500px'>";
+				if (feature.properties.image != "") {
+					popup += '<img src = "' + feature.properties.image + '" width="100%" alt="外観の写真">';
+				} else { }
+
+				popup += "<p>" + feature.properties.address + "</p>";
+
+				if (feature.properties.shop == "1") {
+					popup += "ショップ：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "ショップ：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.atm == "1") {
+					popup += "　ATM：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "　ATM：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.lan == "1") {
+					popup += "　無線LAN：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "　無線LAN：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.restrant == "1") {
+					popup += "<br>レストラン：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "<br>レストラン：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.coffee_shop == "1") {
+					popup += "　喫茶店：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "　喫茶店：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.museum == "1") {
+					popup += "<br>宿泊施設：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "<br>宿泊施設：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.hot_spring == "1") {
+					popup += "　温泉施設：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "　温泉施設：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.camp == "1") {
+					popup += "<br>キャンプ場等：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "<br>キャンプ場等：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.park == "1") {
+					popup += "　公園：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "　公園：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.observation_deck == "1") {
+					popup += "<br>展望台：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "<br>展望台：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.museum == "1") {
+					popup += "　美術館・博物館：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "　美術館・博物館：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.gstand == "1") {
+					popup += "<br>ガゾリンスタンド：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "<br>ガソリンスタンド：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.ev == "1") {
+					popup += "　EV充電：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "　EV充電：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.baby_bed == "1") {
+					popup += "<br>ベビーベッド：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "<br>ベビーベッド：" + "<span id='no'>×</span>";
+				}
+
+				if (feature.properties.fukushi_toilet == "1") {
+					popup += "　福祉トイレ：" + "<span id='yes'>◯</span>";
+				} else {
+					popup += "　福祉トイレ：" + "<span id='no'>×</span>";
+				}
 
 				if (feature.properties.wikipedia != "") {
-					popup += "<br><a href='" + feature.properties.wikipedia + "' target='_blank' class='link'>WikiPedia</a>";
+					popup += "<p><a href='" + feature.properties.wikipedia + "' target='_blank' class='link'>WikiPedia</a>";
 				} else { }
 
 				if (feature.properties.url != "") {
-					popup += "、<a href='" + feature.properties.url + "' target='_blank' class='link'>URL</a>";
+					popup += "　<a href='" + feature.properties.website + "' target='_blank' class='link'>URL</a></p>";
 				} else { }
 
 			} else { };
